@@ -1,0 +1,19 @@
+---
+title: "Day1_notes"
+author: "lkm"
+date: "March 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Notes from Day1 of workshop
+
+```{r echo=FALSE}
+##add r code here
+
+
+```
+

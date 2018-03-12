@@ -10,7 +10,7 @@ editor_options:
 # ggplot2 demo
 ```{r setup}
 library(tidyverse)
-
+library(ggthemes)
 ```
 
 ```{r myplot}
@@ -44,5 +44,76 @@ plot3 + geom_point(aes(size=class, color=fl))
 
 plot4 <- ggplot(mpg, aes(x=displ, y=hwy)) #if mapped color here, would be mapping based on a variable (aka column in your data frame)
 plot4 + geom_point(alpha=0.4, color="blue") #outside of aes call, you are telling it what color to make
+
+plot4 + geom_point() + geom_smooth() #adds regression line to points
+```
+
+# Faceting 
+```{r facet}
+
+fplot <- ggplot(mpg, aes(x=displ, y=hwy, color=class))
+fplot + geom_point() + facet_wrap(~manufacturer) #~col name to tell it what to facet by
+```
+
+# plot themes
+```{r theme, echo=TRUE}
+
+#package ggthemes has a bunch of other themes available to use
+
+# can save themes to a variable for re-use!
+mytheme <- theme_classic() + theme(text= element_text(size=16))
+
+fplot + geom_point() + facet_wrap(~manufacturer) + theme_bw()
+fplot + geom_point() + theme_tufte() #Tufte's minimalist theme
+
+fplot + geom_point() + facet_wrap(~year) #year as columns
+#vs
+fplot + geom_point() + facet_grid(year~.) #year as rows
+
+fplot + geom_point() + facet_grid(year~.) + theme_classic() 
+
+ggsave("fplot.png", width = 5, height = 5)
+```
+
+# geoms- look at ways to visualize distributions of your data
+```{r geoms, echo=TRUE}
+  #drv= drive train = front wheel, rear wheel, 4 wheel
+ggplot(mpg, aes(x=drv , y=hwy))+
+  geom_jitter()
+
+ggplot(mpg, aes(x=drv , y=hwy))+
+  geom_boxplot()
+
+ggplot(mpg, aes(x=drv , y=hwy))+
+  geom_violin()
+
+
+## geom_smooth - to run models on data, default is loess (smooth mean)
+plot4 + geom_point() + geom_smooth()
+
+```
+
+#labels
+```{r labs, echo= TRUE}
+plot4 + geom_point() + mytheme +
+  labs(title="Relationship btwn engine size and highway mileage (mpg)",
+       x= "Engine size (liters displaced)",
+       y= "Highway mileage (mpg)")
+
+#to make fonts bigger, use theme(), here i used the mytheme created above and added it to this graph!
+```
+
+#barcharts 
+```{r bars, echo=TRUE}
+
+ggplot(mpg, aes(x=fl)) +
+  geom_bar() #plots fl on x axis and counts on y axis, default stat
+  
+  #check ?geom_bar() *or any other geom* to see the default stat that is used
+
+
+ggplot(mpg, aes(x=fl, fill=class)) + 
+  geom_bar(position= "fill") #position will change how bar is stacked
+
 ```
 

@@ -15,5 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ##add r code here
 
 
+
 ```
 
+# Notes on projects and github  
+* I had originally started a project, then later she had us make a new project via version control. I ended up just deleting the original one and fresh, but I believe I can copy and paste files into the github repo folder and then reopen/commit to github  

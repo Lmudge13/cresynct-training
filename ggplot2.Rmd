@@ -3,10 +3,46 @@ title: "Graphics with ggplot2"
 author: "lkm"
 date: "March 12, 2018"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 # ggplot2 demo
 ```{r setup}
+library(tidyverse)
 
+```
+
+```{r myplot}
+#today we will use the mpg dataframe in base R
+
+head(mpg)
+
+myplot<- ggplot(mpg, aes(x=displ, y=hwy)) 
+myplot + geom_point(alpha= 0.4) #sets transparency of points to see if they are stacked
+
+
+
+```
+
+```{r plot2}
+
+plot2 <- ggplot(mpg, aes(x=displ, y=hwy, color=class)) #added color into original aes argument in order to color the points
+plot2 + geom_point()
+
+```
+
+# make a scatterplot of 'hwy' vs 'cty' with different size points representing each 'class' and different colors for each fuel type
+
+```{r plot3}
+plot3 <- ggplot(mpg, aes(x=hwy, y=cty))
+plot3 + geom_point(aes(size=class, color=fl))
+  #get warning tho because putting size to a factor doesn't really make much sense
+```
+
+```{r plot4}
+
+plot4 <- ggplot(mpg, aes(x=displ, y=hwy)) #if mapped color here, would be mapping based on a variable (aka column in your data frame)
+plot4 + geom_point(alpha=0.4, color="blue") #outside of aes call, you are telling it what color to make
 ```
 

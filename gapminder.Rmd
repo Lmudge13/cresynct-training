@@ -6,7 +6,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-
+# Libraries
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -14,7 +14,7 @@ library(tidyverse)
 library(skimr) #more detailed info to skim dataset
 ```
 
-#Input data
+# Input data
 ```{r data}
 
 gapminder <- read_csv("https://raw.githubusercontent.com/jules32/2017-11-30-MBARI/gh-pages/data/gapminder.csv")
@@ -36,8 +36,8 @@ skim(gapminder)
 ```
 
 
-# Using dplyr
-```{r wrangle}
+# Using dplyr::filter
+```{r filter, echo= TRUE}
 
 dplyr::filter(gapminder, country=="Switzerland")
 
@@ -47,4 +47,25 @@ dplyr::filter(gapminder, min(lifeExp) & year > 2005)
 
 ```
 
+# Using dplyr:: select
+```{r select, echo=TRUE}
+
+dplyr::select(gapminder, -continent) #selects all data in gapminder, but drops the continent column
+
+##make df with no continent column and only year 2007
+
+dplyr::select(gapminder, -continent) %>%
+  filter(year == 2007)
+
+```
+
+# Using dplyr::mutate
+```{r mutate, echo=TRUE}
+
+gapminder %>% 
+  mutate(gdp = gdpPercap * pop) %>% #making a new col with gdp, not normalized by per capita
+  arrange(desc(gdp)) #this will arrange output by gdp values, descening from highest to lowest
+
+
+```
 

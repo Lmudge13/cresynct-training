@@ -3,17 +3,48 @@ title: "gapminder-wrangle"
 author: "lkm"
 date: "March 13, 2018"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(skimr) #more detailed info to skim dataset
 ```
 
 #Input data
 ```{r data}
 
 gapminder <- read_csv("https://raw.githubusercontent.com/jules32/2017-11-30-MBARI/gh-pages/data/gapminder.csv")
+
+##quick functions to look at structure of data set:
+
+head(gapminder, 2) #add a number to specify number of rows want to see
+tail(gapminder, 3) 
+
+str(gapminder)
+
+dim(gapminder)
+ncol(gapminder)
+nrow(gapminder)
+
+summary(gapminder)
+
+skim(gapminder)
 ```
+
+
+# Using dplyr
+```{r wrangle}
+
+dplyr::filter(gapminder, country=="Switzerland")
+
+dplyr::filter(gapminder, lifeExp < 30)
+
+dplyr::filter(gapminder, min(lifeExp) & year > 2005)
+
+```
+
 

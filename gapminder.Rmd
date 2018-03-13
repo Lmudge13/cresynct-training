@@ -69,3 +69,14 @@ gapminder %>%
 
 ```
 
+
+# Using dplyr::group_by(), to create subsets of dataframe
+```{r groups, echp=TRUE}
+
+gapminder %>% 
+  group_by(country) %>%
+  mutate(gdp = gdpPercap * pop, max_gdp=max(gdp)) %>%
+  ungroup() #good practice to ungroup after doing the manipulation
+
+```
+

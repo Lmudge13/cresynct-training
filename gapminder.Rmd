@@ -6,7 +6,7 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-# Libraries
+# Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -35,8 +35,8 @@ summary(gapminder)
 skim(gapminder)
 ```
 
-
-# Using dplyr::filter
+#dplyr
+## Using dplyr::filter
 ```{r filter, echo= TRUE}
 
 dplyr::filter(gapminder, country=="Switzerland")
@@ -47,7 +47,7 @@ dplyr::filter(gapminder, min(lifeExp) & year > 2005)
 
 ```
 
-# Using dplyr:: select
+## Using dplyr:: select
 ```{r select, echo=TRUE}
 
 dplyr::select(gapminder, -continent) #selects all data in gapminder, but drops the continent column
@@ -59,7 +59,7 @@ dplyr::select(gapminder, -continent) %>%
 
 ```
 
-# Using dplyr::mutate
+## Using dplyr::mutate
 ```{r mutate, echo=TRUE}
 
 gapminder %>% 
@@ -70,13 +70,118 @@ gapminder %>%
 ```
 
 
-# Using dplyr::group_by(), to create subsets of dataframe
-```{r groups, echp=TRUE}
+## Using dplyr::group_by(), to create subsets of dataframe
+```{r groups, echo=TRUE}
 
 gapminder %>% 
   group_by(country) %>%
   mutate(gdp = gdpPercap * pop, max_gdp=max(gdp)) %>%
   ungroup() #good practice to ungroup after doing the manipulation
 
+```
+
+## Using dplyr::summarize with group_by & arrange
+```{r summarize, echo=TRUE}
+
+#use summarize when want to collapse group into one output
+
+gapminder %>%
+  group_by(country) %>%
+  mutate(gdp = pop * gdpPercap) %>%
+  summarize(max_gdp = max(gdp)) %>%
+  ungroup()
+  #output is 2 cols with country and max_gdp for each country (so 1 row per country)
+
+#Now arrange the output by max_gdp values
+gapminder %>%
+  group_by(country) %>%
+  mutate(gdp = pop * gdpPercap) %>%
+  summarize(max_gdp = max(gdp)) %>%
+  ungroup() %>%
+  arrange(max_gdp)
+
+```
+
+## Joining datasets together using dplyr:
+```{r join, echo=TRUE}
+
+#inputting a new df called co2, which as CO2 emissions for each country in the year 2007
+co2 <- read_csv("https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/co2.csv")
+
+head(co2)
+summary(co2)
+dim(co2) #CO2 emissions for 12 countries
+
+
+## Add co2 and gapminder data together:
+
+# First need to filter gapminder: since co2 only has year 2007, we will get all the data from gapminder that is fromt he same year
+gap_2007 <- gapminder %>%
+  filter(year == 2007) 
+
+#### trying a left join:
+lj <- left_join(gap_2007, co2, by= "country")
+  #ALWAYS look at joins afterwards to see if anything failed, there is stringr to help with strings in case something didn't work
+  #to properly join, will have to match *exactly*
+
+dim(lj) #is what we expect based on rows and cols in gapminder, co2_2007 col added only for the countries beginning with A (aka all the data from co2)
+head(lj)
+
+
+### trying a right join:
+rj<- right_join(gap_2007, co2, by ="country")
+head(rj) #didn't keep info for all the A countries
+```
+
+
+#tidyr
+
+## starting with a wide format of gapminder, using gather and separate to put into long form
+```{r tidy, echo=TRUE}
+
+#load a wide format of the gapminder data:
+gap_wide <- read_csv("https://raw.githubusercontent.com/OHI-Science/data-science-training/master/data/gapminder_wide.csv")
+View(gap_wide)
+
+#gather: 
+
+#gap_wide %>%
+  #gather(observation, obs_values) #stacks everythign in 2 columns..
+gap_wide %>%
+  gather(observation, observ_values, -continent, -country) #better, but not best!
+
+gap_long <- gap_wide %>%
+  gather(key   = obstype_year,
+         value = obs_values,
+         dplyr::starts_with('pop'),
+         dplyr::starts_with('lifeExp'),
+         dplyr::starts_with('gdpPercap')) #here i'm listing all the columns to use in gather
+View(gap_long) #however, have year in the observation type column too (don't want two types of data in 1 cell), so need to separate year out
+
+
+# gather & separate:
+
+gap_long <- gap_wide %>% 
+  gather(key   = obstype_year,
+         value = obs_values,
+         -continent, -country) %>% #this type just said cols DONT want to keep
+  separate(obstype_year,
+           into = c('obs_type','year'),
+           sep = "_",
+           convert = TRUE) #this ensures that the year column is an integer rather than a character
+head(gap_long) #now have sep cols for obs_type and year
+tail(gap_long)
+str(gap_long)
+
+```
+
+## using spread
+```{r spread, echo=TRUE}
+
+#take a long df and put it back into an intermediate form:
+
+gap_normal <- gap_long %>% 
+  spread(obs_type, obs_values) #think of key as what col names will be and value will be the values in the columns
+head(gap_normal)
 ```
 

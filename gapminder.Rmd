@@ -1,0 +1,19 @@
+---
+title: "gapminder-wrangle"
+author: "lkm"
+date: "March 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+#Input data
+```{r data}
+
+gapminder <- read_csv("https://raw.githubusercontent.com/jules32/2017-11-30-MBARI/gh-pages/data/gapminder.csv")
+```
+

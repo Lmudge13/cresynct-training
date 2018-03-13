@@ -1,5 +1,5 @@
 ---
-title: "Day1_notes"
+title: "Workshop Notes"
 author: "lkm"
 date: "March 12, 2018"
 output: html_document
@@ -7,16 +7,19 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
 # Notes from Day1 of workshop
 
 ```{r echo=FALSE}
 ##add r code here
-
+##deleted practice code when recreated project
 
 
 ```
 
-# Notes on projects and github  
+### Notes on projects and github  
 * I had originally started a project, then later she had us make a new project via version control. I ended up just deleting the original one and fresh, but I believe I can copy and paste files into the github repo folder and then reopen/commit to github  
+
+

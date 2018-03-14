@@ -204,7 +204,7 @@ buoy_daily <- buoy %>%
   mutate(temp_clean = gsub("999.0", NA, WTMP_degC)) %>%
   mutate(temp_clean = as.numeric(temp_clean)) %>%
   group_by(date) %>%
-  summarize(mean(temp_clean))
+  summarize(mean_temp=mean(temp_clean, na.rm=TRUE))
 View(buoy_daily)
 
 

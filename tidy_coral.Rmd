@@ -1,0 +1,215 @@
+---
+title: "tidy_coral"
+author: "lkm"
+date: "March 13, 2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries
+```{r packages}
+library(stringr)
+library(skimr)
+library(janitor)
+library(tidyverse)
+```
+
+# Data
+```{r data}
+## data filepaths/urls ----
+
+## benthic data
+benthic_url <- 'https://www.nodc.noaa.gov/archive/arc0054/0104255/1.1/data/0-data/cd08/100308OaAla03m.CSV'
+
+## buoy data
+buoy_url <- 'http://www.ndbc.noaa.gov/view_text_file.php?filename=mokh1h2010.txt.gz&dir=data/historical/stdmet/'
+
+
+benthic_raw <- read_csv(benthic_url) #call it raw and keep this original dataset
+head(benthic_raw) 
+```
+
+# Wrangle benthic data
+Add description of data here or link to metadeta info
+
+```{r wrangle}
+## the `janitor` package's `clean_names` function
+benthic <- benthic_raw %>%
+  janitor::clean_names()
+
+names(benthic)
+
+## select a few columns we want to start working with:
+benthic <- benthic %>%
+  select(id_name, point, x, y, id_date)
+
+head(benthic)
+
+# but now we have issue with id_date- there are #'s following the numbers so let's clean that up
+benthic <- benthic %>%
+  mutate(date = stringr::str_remove_all(id_date, "#"))
+  #sometimes better to create a new col first in case it doesn't work the way you want it to, and then when finally get the col you want, NULL the other one out
+head(benthic)
+
+
+```
+
+# Checking out our newly wrangled benthic data
+```{r checkout}
+
+summary(benthic)
+skimr:: skim(benthic)
+  #6 unique dates, 16 unique id_names
+
+unique(benthic$id_name)
+
+#quick barplot to see what's up
+ggplot(benthic, aes(date, fill = id_name)) +
+         geom_bar()
+```
+
+# Creating Buoy data from the url
+```{r buoy}
+
+buoy <- readr::read_csv(buoy_url)
+head(buoy) #doesn't look right, in the environment it read in at 844435 obs of 1 variable (aka in one col)
+
+#buoy_raw <- read_csv("data/buoy_local_copy.csv") #example they had but I don't have a local copy of it
+
+## read_table
+buoy_raw <- read_table(buoy_url)
+head(buoy) ## still not quite right -- missed some columns. 
+
+## read_table2
+buoy_raw <- read_table2(buoy_url)
+head(buoy_raw) ## this is what we need!
+
+##this stuff below was other examplesm but buoy_raw is what we will be using
+#buoy_test <- read_lines(buoy_url)
+#y <- buoy_test %>%
+#  as_data_frame() %>%
+#  mutate(value = str_replace_all(value, ' +', ',')) 
+#write_delim(y, 'data/buoy_local_copy.csv')
+
+#z <- read_csv('data/buoy_local_copy.csv', skip=1)
+#head(z) ## PRAISE BE
+
+## THE FINAL BUOY CREATION - REVERT TO THIS ONE WITH WRANGLING MISTAKES
+buoy <- buoy_raw
+head(buoy)
+names(buoy) #have 2 columns of headers: the actual head and the first row
+```
+
+# Wrangle buoy data
+let’s see if we can take that the first row of data (the units) and stick it on the with the column names (measurement). Then, we can get rid of that units row.
+
+In the stringr package, there is a way to combine strings using the str_c function.
+
+There’s 3 things we want to do to these column names:
+
+* make the column header a combo of rows 1 and 2
+    + we want this to look like this: currentheader_row1. So we want to combine these two rows with a _  
+    + we want to identify row1 by name, not buoy[1,] because a) it’s cryptic, and b) it will introduce silent problems if you run this code more than once  
+* clean up the header; get rid of # and /  
+* delete the now-redundant row 1  
+
+```{r wrangle_buoy}
+
+## 1. overwrite column names
+names(buoy) <- str_c(names(buoy),                  ## current header
+                  buoy %>% filter(`#YY` == "#yr"), ## row1 -- don't say buoy[1,] 
+                  sep = "_")                       ## separate by `_`
+
+names(buoy) ## Looks a lot better
+
+
+## 2. clean up a bit more to get rid of the `#`s and the `/`s. 
+names(buoy) <- str_replace_all(names(buoy), "#", "")  # replace `#` with nothing 
+names(buoy) <- str_replace_all(names(buoy), "/", "_") # replace `/` with `_`
+
+names(buoy)
+
+
+## 3. remove redundant row with units
+buoy <- buoy %>%
+  filter(YY_yr != "#yr")
+head(buoy)
+```
+
+
+# Explore the data
+```{r explore}
+
+# quick look at count of temp data
+ggplot(buoy, aes(WTMP_degC)) +
+  geom_bar()
+
+
+## I googled how to rotate the tick label axis so that we can read the labels:
+ggplot(buoy, aes(WTMP_degC)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+### Consider this a to do list when you start working on your own.  
+* Seems like 999.0 is not really a measured °Celsius  
+* After confirming with the metadata, we should replace it with NA stringr::str_replace_all()  
+* WTMP_degC does not seem to be numeric (since 999.0 is right there next to 28.6).  
+* We could confirm this with str(buoy), then convert to numeric with  buoy <- buoy %>% mutate(WTMP_degC = as.numeric(WTMP_degC))  
+* Why is this a string? So actually all variables in buoy are character instead of numeric, and it’s because when we originally read in the file the first row was measurement units, which was a character string. So any of these that we want to treat of numbers we are going to have to explicitly change to numeric.
+
+# Look at dates: Thinking about joining the datasets together
+```{r dates}
+
+head(benthic)
+head(buoy)
+
+#the buoy data has date information spread across 3 columns so we can use tidy: unite to re-organize it
+
+buoy <- buoy %>%
+  tidyr::unite(date, c(YY_yr, MM_mo, DD_dy), sep = "-") #if did remove= FALSE would make a new col instead of replacing existing col
+
+head(buoy) #can only see the beginning part of date with head, but when View(buoy) it looks good
+
+
+
+```
+
+# Join datasets
+```{r join}
+
+bb_join <- benthic %>%
+  left_join(buoy, by = "date")
+head(bb_join)
+
+## let's select a few columns and inspect:
+bb_join %>%
+  select(id_name, x, y, date, hh_hr, mm_mn, WTMP_degC) %>%
+  head()
+
+dim(bb_join) #LOOOOTS of rows, b/c buoy data is collected every 6 mins
+
+
+```
+
+## tryin a new join with less rows -- unsure if this is correct!
+```{r}
+# get rid of 99's and get daily summary
+buoy_daily <- buoy %>%
+  mutate(temp_clean = gsub("999.0", NA, WTMP_degC)) %>%
+  mutate(temp_clean = as.numeric(temp_clean)) %>%
+  group_by(date) %>%
+  summarize(mean(temp_clean))
+View(buoy_daily)
+
+
+bb_new_join <- left_join(buoy_daily, benthic, by ="date")
+dim(bb_new_join)
+head(bb_new_join)
+```
+
